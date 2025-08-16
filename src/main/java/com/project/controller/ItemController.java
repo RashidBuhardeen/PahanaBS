@@ -3,86 +3,75 @@ package com.project.controller;
 import com.project.model.Item;
 import com.project.service.ItemService;
 
-import javax.servlet.*;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
-import java.sql.SQLException;
 
-
-
+@WebServlet("/items")
 public class ItemController extends HttpServlet {
-	 private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = 1L;
     private ItemService itemService;
+
+    private static final String VIEW_PATH = "WEB-INF/views/item/";
 
     @Override
     public void init() throws ServletException {
-        // Use Singleton pattern for consistency across the project
-        itemService = ItemService.getInstance();
+        itemService = ItemService.getInstance(); // Singleton
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
+        String action = req.getParameter("action");
         if (action == null) action = "list";
 
         try {
             switch (action) {
                 case "new":
-                    request.getRequestDispatcher("WEB-INF/views/item/add-item.jsp").forward(request, response);
-                    break;
-
+                    req.getRequestDispatcher(VIEW_PATH + "add-item.jsp").forward(req, resp);
+                    return;
                 case "edit":
-                    int editId = Integer.parseInt(request.getParameter("id"));
-                    Item existingItem = itemService.getItemById(editId);
-                    request.setAttribute("item", existingItem);
-                    request.getRequestDispatcher("WEB-INF/views/item/edit-item.jsp").forward(request, response);
-                    break;
-
+                    int editId = Integer.parseInt(req.getParameter("id"));
+                    req.setAttribute("item", itemService.getItemById(editId));
+                    req.getRequestDispatcher(VIEW_PATH + "edit-item.jsp").forward(req, resp);
+                    return;
                 case "delete":
-                    int deleteId = Integer.parseInt(request.getParameter("id"));
+                    int deleteId = Integer.parseInt(req.getParameter("id"));
                     itemService.deleteItem(deleteId);
-                    response.sendRedirect("items");
-                    break;
-
+                    resp.sendRedirect("items");
+                    return;
                 default:
-                    request.setAttribute("items", itemService.getAllItems());
-                    request.getRequestDispatcher("WEB-INF/views/item/view-items.jsp").forward(request, response);
-                    break;
+                    req.setAttribute("items", itemService.getAllItems());
+                    req.getRequestDispatcher(VIEW_PATH + "view-items.jsp").forward(req, resp);
             }
-        } catch (SQLException e) {
-            throw new ServletException("Database error in ItemController", e);
+        } catch (Exception e) {
+            throw new ServletException("Error handling item action: " + action, e);
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
-        String idStr = request.getParameter("id");
-        String itemCode = request.getParameter("itemCode");
-        String itemName = request.getParameter("itemName");
-        double price = Double.parseDouble(request.getParameter("price"));
-        int stockQuantity = Integer.parseInt(request.getParameter("stockQuantity"));
-
-        Item item = new Item();
-        item.setItemCode(itemCode);
-        item.setItemName(itemName);
-        item.setPrice(price);
-        item.setStockQuantity(stockQuantity);
+        String idStr = req.getParameter("id");
 
         try {
+            Item item = new Item();
+            item.setItemCode(req.getParameter("itemCode"));
+            item.setItemName(req.getParameter("itemName"));
+            item.setPrice(Double.parseDouble(req.getParameter("price")));
+            item.setStockQuantity(Integer.parseInt(req.getParameter("stockQuantity")));
+
             if (idStr == null || idStr.isEmpty()) {
                 itemService.addItem(item);
             } else {
                 item.setId(Integer.parseInt(idStr));
                 itemService.updateItem(item);
             }
-        } catch (Exception e) {
-            throw new ServletException("Error in ItemController", e);
-        }
 
-        response.sendRedirect("items");
+            resp.sendRedirect("items");
+        } catch (Exception e) {
+            throw new ServletException("Error saving item", e);
+        }
     }
 }
