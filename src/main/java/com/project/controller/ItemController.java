@@ -13,7 +13,7 @@ public class ItemController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private ItemService itemService;
 
-    private static final String VIEW_PATH = "WEB-INF/views/item/";
+    private static final String VIEW_PATH = "WEB-INF/View/item/";
 
     @Override
     public void init() throws ServletException {
@@ -69,7 +69,7 @@ public class ItemController extends HttpServlet {
                 itemService.updateItem(item);
             }
 
-            resp.sendRedirect("items");
+            resp.sendRedirect("navigate?action=items");
         } catch (Exception e) {
             throw new ServletException("Error saving item", e);
         }

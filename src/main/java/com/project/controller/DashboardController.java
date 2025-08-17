@@ -4,6 +4,7 @@ import utils.SessionUtil;
 import com.project.dao.DBConnectionFactory;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,6 +13,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+
+@WebServlet("/dashboard")
 public class DashboardController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 

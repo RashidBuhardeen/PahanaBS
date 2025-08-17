@@ -11,6 +11,7 @@ import java.io.IOException;
 /**
  * Handles login requests (GET → show login page, POST → authenticate user).
  */
+
 @WebServlet("/login")
 public class LoginController extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -29,7 +30,12 @@ public class LoginController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+    	String action = request.getParameter("action");
+        if ("login".equals(action)) {
+            request.getRequestDispatcher("/WEB-INF/View/login.jsp").forward(request, response);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/index.jsp");
+        }
     }
 
     /**
@@ -46,7 +52,7 @@ public class LoginController extends HttpServlet {
         // Validate input
         if (isNullOrEmpty(username) || isNullOrEmpty(password)) {
             request.setAttribute("error", "Username and password are required.");
-            request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/View/login.jsp").forward(request, response);
             return;
         }
 
@@ -61,14 +67,19 @@ public class LoginController extends HttpServlet {
 
             // Redirect based on role
             if ("admin".equalsIgnoreCase(user.getRole())) {
-                response.sendRedirect(request.getContextPath() + "/dashboard");
+                // ❌ Wrong (tries to access /dashboard.jsp in web root)
+                // response.sendRedirect(request.getContextPath() + "/dashboard.jsp");
+
+                // ✅ Correct (forward internally to WEB-INF folder)
+                request.getRequestDispatcher("/WEB-INF/View/dashboard.jsp").forward(request, response);
             } else {
                 response.sendRedirect(request.getContextPath() + "/index.jsp");
             }
+
         } else {
             // Invalid credentials → show error
             request.setAttribute("error", "Invalid username or password.");
-            request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/View/login.jsp").forward(request, response);
         }
     }
 

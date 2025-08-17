@@ -4,12 +4,12 @@ import com.project.model.Bill;
 import com.project.model.BillItem;
 
 import java.sql.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class BillDAO {
 
+    // CREATE BILL + ITEMS
     public boolean createBill(Bill bill) {
         String insertBillSQL = "INSERT INTO bills (customer_id, bill_date, total_amount) VALUES (?, ?, ?)";
         String insertBillItemSQL = "INSERT INTO bill_items (bill_id, item_id, quantity, price) VALUES (?, ?, ?, ?)";
@@ -18,7 +18,6 @@ public class BillDAO {
         try (Connection conn = DBConnectionFactory.getConnection()) {
             conn.setAutoCommit(false);
 
-            // Insert into bills table
             try (PreparedStatement psBill = conn.prepareStatement(insertBillSQL, Statement.RETURN_GENERATED_KEYS)) {
                 psBill.setString(1, bill.getCustomer_account_no());
                 psBill.setTimestamp(2, new java.sql.Timestamp(bill.getBill_date().getTime()));
@@ -32,13 +31,13 @@ public class BillDAO {
                 try (ResultSet generatedKeys = psBill.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         int billId = generatedKeys.getInt(1);
-                        bill.setBill_number(insertBillItemSQL);
+                        bill.setBill_number(String.valueOf(billId)); // ✅ Corrected
 
                         // Insert bill items
                         try (PreparedStatement psBillItem = conn.prepareStatement(insertBillItemSQL)) {
                             for (BillItem item : bill.getBill_items()) {
                                 psBillItem.setInt(1, billId);
-                                psBillItem.setString(2, item.getBill_item_id());
+                                psBillItem.setString(2, item.getItem_code());
                                 psBillItem.setInt(3, item.getQuantity());
                                 psBillItem.setDouble(4, item.getPrice());
                                 psBillItem.addBatch();
@@ -62,6 +61,7 @@ public class BillDAO {
         return success;
     }
 
+    // READ BILL BY ID
     public Bill getBillById(int billId) {
         Bill bill = null;
         String billSQL = "SELECT * FROM bills WHERE id = ?";
@@ -75,9 +75,9 @@ public class BillDAO {
 
                     if (rsBill.next()) {
                         bill = new Bill();
-                        bill.setBill_number("id");
+                        bill.setBill_number(String.valueOf(rsBill.getInt("id")));
                         bill.setCustomer_account_no(rsBill.getString("customer_id"));
-                        bill.setBill_date(rsBill.getDate("bill_date"));
+                        bill.setBill_date(rsBill.getTimestamp("bill_date"));
                         bill.setTotal_amount(rsBill.getDouble("total_amount"));
 
                         // Get bill items
@@ -87,9 +87,9 @@ public class BillDAO {
                                 List<BillItem> items = new ArrayList<>();
                                 while (rsItems.next()) {
                                     BillItem item = new BillItem();
-                                    item.setBill_item_id("id");
-                                    item.setBill_number("id");
-                                    item.setItem_code("item_code");
+                                    item.setBill_item_id(String.valueOf(rsItems.getInt("id")));
+                                    item.setBill_number(String.valueOf(rsItems.getInt("bill_id")));
+                                    item.setItem_code(rsItems.getString("item_id"));
                                     item.setQuantity(rsItems.getInt("quantity"));
                                     item.setPrice(rsItems.getDouble("price"));
                                     items.add(item);
@@ -109,6 +109,7 @@ public class BillDAO {
         return bill;
     }
 
+    // READ ALL BILLS
     public List<Bill> getAllBills() {
         List<Bill> bills = new ArrayList<>();
         String sql = "SELECT * FROM bills ORDER BY bill_date DESC";
@@ -119,9 +120,9 @@ public class BillDAO {
 
             while (rs.next()) {
                 Bill bill = new Bill();
-                bill.setBill_number("id");
-                bill.setCustomer_account_no("");
-                bill.setBill_date(rs.getDate("bill_date"));
+                bill.setBill_number(String.valueOf(rs.getInt("id")));
+                bill.setCustomer_account_no(rs.getString("customer_id"));
+                bill.setBill_date(rs.getTimestamp("bill_date"));
                 bill.setTotal_amount(rs.getDouble("total_amount"));
                 bills.add(bill);
             }
@@ -132,5 +133,51 @@ public class BillDAO {
         }
 
         return bills;
+    }
+
+    // UPDATE BILL (basic fields only)
+    public boolean updateBill(Bill bill) {
+        String sql = "UPDATE bills SET customer_id=?, bill_date=?, total_amount=? WHERE id=?";
+        try (Connection conn = DBConnectionFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, bill.getCustomer_account_no());
+            ps.setTimestamp(2, new java.sql.Timestamp(bill.getBill_date().getTime()));
+            ps.setDouble(3, bill.getTotal_amount());
+            ps.setInt(4, Integer.parseInt(bill.getBill_number()));
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("❌ Error updating bill: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // DELETE BILL (and its items)
+    public boolean deleteBill(int billId) {
+        String deleteItems = "DELETE FROM bill_items WHERE bill_id=?";
+        String deleteBill = "DELETE FROM bills WHERE id=?";
+
+        try (Connection conn = DBConnectionFactory.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement psItems = conn.prepareStatement(deleteItems)) {
+                psItems.setInt(1, billId);
+                psItems.executeUpdate();
+            }
+
+            try (PreparedStatement psBill = conn.prepareStatement(deleteBill)) {
+                psBill.setInt(1, billId);
+                psBill.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            System.out.println("❌ Error deleting bill: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }
