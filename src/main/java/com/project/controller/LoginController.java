@@ -11,7 +11,6 @@ import java.io.IOException;
 /**
  * Handles login requests (GET → show login page, POST → authenticate user).
  */
-
 @WebServlet("/login")
 public class LoginController extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -30,7 +29,7 @@ public class LoginController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-    	String action = request.getParameter("action");
+        String action = request.getParameter("action");
         if ("login".equals(action)) {
             request.getRequestDispatcher("/WEB-INF/View/login.jsp").forward(request, response);
         } else {
@@ -67,12 +66,16 @@ public class LoginController extends HttpServlet {
 
             // Redirect based on role
             if ("admin".equalsIgnoreCase(user.getRole())) {
-                // ❌ Wrong (tries to access /dashboard.jsp in web root)
-                // response.sendRedirect(request.getContextPath() + "/dashboard.jsp");
-
-                // ✅ Correct (forward internally to WEB-INF folder)
+                // Forward internally to admin dashboard JSP (under WEB-INF)
                 request.getRequestDispatcher("/WEB-INF/View/dashboard.jsp").forward(request, response);
+
+            } else if ("cashier".equalsIgnoreCase(user.getRole())) {
+                // Redirect to the CashierDashboardController (which forwards to /WEB-INF/View/cashier/cashier-db.jsp)
+//                response.sendRedirect("/WEB-INF/View/cashier/cashier-db.jsp");
+                request.getRequestDispatcher("/WEB-INF/View/cashier/cashier-db.jsp").forward(request, response);
+
             } else {
+                // Fallback for other roles, if any
                 response.sendRedirect(request.getContextPath() + "/index.jsp");
             }
 

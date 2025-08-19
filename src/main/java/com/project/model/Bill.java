@@ -10,6 +10,7 @@ public class Bill {
     private Date bill_date;
     private double total_amount;
     private List<BillItem> bill_items;
+    private String customer_name;
 
     public Bill() {
     }
@@ -62,4 +63,8 @@ public class Bill {
     public void setBill_items(List<BillItem> bill_items) {
         this.bill_items = bill_items;
     }
+    
+    public String getCustomer_name() { return customer_name; }
+    public void setCustomer_name(String customer_name) { this.customer_name = customer_name; }
+
 }

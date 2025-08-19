@@ -32,9 +32,6 @@ public class BillController extends HttpServlet {
         case "create":
             request.getRequestDispatcher("/WEB-INF/View/bill/create-bill.jsp").forward(request, response);
             break;
-        case "edit":
-            editBill(request, response);
-            break;
         case "delete":
             deleteBill(request, response);
             break;
@@ -56,8 +53,6 @@ public class BillController extends HttpServlet {
 
         if ("create".equals(action)) {
             createBill(request, response);
-        } else if ("update".equals(action)) {
-            updateBill(request, response);
         } else {
             response.sendRedirect("bill?action=list");
         }
@@ -78,26 +73,47 @@ public class BillController extends HttpServlet {
         request.getRequestDispatcher("views/bill/view-bill.jsp").forward(request, response);
     }
 
-    // Create new bill
+ // Create new bill
     private void createBill(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         try {
             String customerAccount = request.getParameter("account_no");
-            String[] selectedItems = request.getParameterValues("item");
+            String[] selectedItemIds = request.getParameterValues("item_ids");
+
+            if (customerAccount == null || customerAccount.isEmpty()) {
+                request.setAttribute("error", "Select a customer.");
+                request.getRequestDispatcher("/WEB-INF/View/bill/create-bill.jsp").forward(request, response);
+                return;
+            }
+
             List<BillItem> billItems = new ArrayList<>();
             double totalAmount = 0.0;
 
-            if (selectedItems != null) {
-                for (String itemName : selectedItems) {
-                    int quantity = Integer.parseInt(request.getParameter("qty_" + itemName.replaceAll(" ","_")));
-                    double price = Double.parseDouble(request.getParameter("price_" + itemName.replaceAll(" ","_")));
-                    totalAmount += price * quantity;
+            if (selectedItemIds != null) {
+                for (String idStr : selectedItemIds) {
+                    int itemId = Integer.parseInt(idStr);
 
-                    BillItem billItem = new BillItem();
-                    billItem.setItem_code(itemName); // storing item_name as item_code
-                    billItem.setQuantity(quantity);
-                    billItem.setPrice(price);
-                    billItems.add(billItem);
+                    String qtyParam = request.getParameter("qty_" + itemId);
+                    String priceParam = request.getParameter("price_" + itemId);
+
+                    int quantity = (qtyParam == null || qtyParam.isEmpty()) ? 0 : Integer.parseInt(qtyParam);
+                    double price = (priceParam == null || priceParam.isEmpty()) ? 0.0 : Double.parseDouble(priceParam);
+
+                    if (quantity > 0) {
+                        totalAmount += price * quantity;
+
+                        BillItem bi = new BillItem();
+                        bi.setItemId(itemId);
+                        bi.setQuantity(quantity);
+                        bi.setPrice(price);
+                        billItems.add(bi);
+                    }
                 }
+            }
+
+            if (billItems.isEmpty()) {
+                request.setAttribute("error", "Select at least one item with quantity > 0.");
+                request.getRequestDispatcher("/WEB-INF/View/bill/create-bill.jsp").forward(request, response);
+                return;
             }
 
             Bill bill = new Bill();
@@ -111,51 +127,16 @@ public class BillController extends HttpServlet {
                 response.sendRedirect("navigate?action=bills");
             } else {
                 request.setAttribute("error", "Failed to create bill!");
-                request.getRequestDispatcher("views/bill/create-bill.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/View/bill/create-bill.jsp").forward(request, response);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Error: " + e.getMessage());
-            request.getRequestDispatcher("views/bill/create-bill.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/View/bill/create-bill.jsp").forward(request, response);
         }
     }
 
-    // Edit bill (load for update)
-    private void editBill(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int billId = Integer.parseInt(request.getParameter("id"));
-        Bill bill = billDAO.getBillById(billId);
-        request.setAttribute("bill", bill);
-        request.getRequestDispatcher("views/bill/edit-bill.jsp").forward(request, response);
-    }
-
-    // Update bill
-    private void updateBill(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        try {
-            int billId = Integer.parseInt(request.getParameter("bill_id"));
-            String customerAccount = request.getParameter("account_no");
-            double totalAmount = Double.parseDouble(request.getParameter("total_amount"));
-
-            Bill bill = new Bill();
-            bill.setBill_number(String.valueOf(billId));
-            bill.setCustomer_account_no(customerAccount);
-            bill.setBill_date(new Date());
-            bill.setTotal_amount(totalAmount);
-
-            boolean success = billDAO.updateBill(bill);
-            if (success) {
-                response.sendRedirect("bill?action=list");
-            } else {
-                request.setAttribute("error", "Failed to update bill!");
-                editBill(request, response);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Error: " + e.getMessage());
-            editBill(request, response);
-        }
-    }
 
     // Delete bill
     private void deleteBill(HttpServletRequest request, HttpServletResponse response) throws IOException {

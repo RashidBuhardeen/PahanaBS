@@ -4,7 +4,6 @@
 <%@ page import="com.project.model.BillItem" %>
 <%@ page import="java.util.List" %>
 <%
-    // Assuming bill object is passed as request attribute
     Bill bill = (Bill) request.getAttribute("bill");
     SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
 %>
@@ -83,16 +82,19 @@
     <h2>Pahana Book Shop</h2>
     <h3>Bill Receipt</h3>
 
-    <div class="bill-info">
-        <p><strong>Bill Number:</strong> <%= bill.getBill_number() %></p>
-        <p><strong>Customer Account:</strong> <%= bill.getCustomer_account_no() %></p>
-        <p><strong>Bill Date:</strong> <%= sdf.format(bill.getBill_date()) %></p>
-    </div>
+<div class="bill-info">
+    <p><strong>Bill Number:</strong> <%= bill.getBill_number() %></p>
+    <p><strong>Customer Account:</strong> <%= bill.getCustomer_account_no() %></p>
+    <p><strong>Customer Name:</strong> <%= bill.getCustomer_name() %></p>  <!-- NEW -->
+    <p><strong>Bill Date:</strong> <%= sdf.format(bill.getBill_date()) %></p>
+</div>
+
 
     <table>
         <thead>
         <tr>
-            <th>Item</th>
+            <th>Book Code</th>
+            <th>Book Name</th>
             <th>Price (Rs.)</th>
             <th>Quantity</th>
             <th>Total (Rs.)</th>
@@ -107,16 +109,18 @@
                 totalAmount += itemTotal;
         %>
         <tr>
-            <td><%= item.getItem_code() %></td>
-            <td><%= item.getPrice() %></td>
-            <td><%= item.getQuantity() %></td>
-            <td><%= itemTotal %></td>
+<td><%= item.getItem_code() %></td>
+<td><%= item.getBook_name() %></td>
+<td><%= item.getPrice() %></td>
+<td><%= item.getQuantity() %></td>
+<td><%= itemTotal %></td>
+
         </tr>
         <% } %>
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="3" style="text-align:right;">Total Amount:</td>
+            <td colspan="4" style="text-align:right;">Total Amount:</td>
             <td>Rs. <%= totalAmount %></td>
         </tr>
         </tfoot>
@@ -125,4 +129,13 @@
     <button class="print-btn" onclick="window.print()">Print Bill</button>
 </div>
 </body>
+<script>
+  window.addEventListener('load', function () {
+    window.print();
+  });
+  window.onafterprint = function () {
+    window.close();
+  };
+</script>
+
 </html>

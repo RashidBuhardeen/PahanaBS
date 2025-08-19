@@ -3,111 +3,147 @@ package com.project.dao;
 import com.project.model.Bill;
 import com.project.model.BillItem;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BillDAO {
 
-    // CREATE BILL + ITEMS
-    public boolean createBill(Bill bill) {
-        String insertBillSQL = "INSERT INTO bills (customer_id, bill_date, total_amount) VALUES (?, ?, ?)";
-        String insertBillItemSQL = "INSERT INTO bill_items (bill_id, item_id, quantity, price) VALUES (?, ?, ?, ?)";
-        boolean success = false;
+	// CREATE BILL + ITEMS (fixed to use INT item_id and decrement stock)
+	public boolean createBill(Bill bill) {
+	    final String insertBillSQL =
+	        "INSERT INTO bills (customer_id, bill_date, total_amount) VALUES (?, ?, ?)";
+	    final String insertBillItemSQL =
+	        "INSERT INTO bill_items (bill_id, item_id, quantity, price) VALUES (?, ?, ?, ?)";
+	    final String decStockSQL =
+	        "UPDATE items SET stock_quantity = stock_quantity - ? WHERE id = ? AND stock_quantity >= ?";
 
-        try (Connection conn = DBConnectionFactory.getConnection()) {
-            conn.setAutoCommit(false);
+	    try (Connection conn = DBConnectionFactory.getConnection()) {
+	        conn.setAutoCommit(false);
 
-            try (PreparedStatement psBill = conn.prepareStatement(insertBillSQL, Statement.RETURN_GENERATED_KEYS)) {
-                psBill.setString(1, bill.getCustomer_account_no());
-                psBill.setTimestamp(2, new java.sql.Timestamp(bill.getBill_date().getTime()));
-                psBill.setDouble(3, bill.getTotal_amount());
-                int affectedRows = psBill.executeUpdate();
+	        try (PreparedStatement psBill =
+	                 conn.prepareStatement(insertBillSQL, Statement.RETURN_GENERATED_KEYS)) {
 
-                if (affectedRows == 0) {
-                    throw new SQLException("❌ Creating bill failed, no rows affected.");
-                }
+	            psBill.setString(1, bill.getCustomer_account_no());
+	            // bills.bill_date is DATE; using Timestamp is fine (time part will be truncated by MySQL)
+	            psBill.setTimestamp(2, new Timestamp(bill.getBill_date().getTime()));
+	            psBill.setBigDecimal(3, BigDecimal.valueOf(bill.getTotal_amount()));
 
-                try (ResultSet generatedKeys = psBill.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        int billId = generatedKeys.getInt(1);
-                        bill.setBill_number(String.valueOf(billId)); // ✅ Corrected
+	            int affectedRows = psBill.executeUpdate();
+	            if (affectedRows == 0) throw new SQLException("Creating bill failed, no rows affected.");
 
-                        // Insert bill items
-                        try (PreparedStatement psBillItem = conn.prepareStatement(insertBillItemSQL)) {
-                            for (BillItem item : bill.getBill_items()) {
-                                psBillItem.setInt(1, billId);
-                                psBillItem.setString(2, item.getItem_code());
-                                psBillItem.setInt(3, item.getQuantity());
-                                psBillItem.setDouble(4, item.getPrice());
-                                psBillItem.addBatch();
-                            }
-                            psBillItem.executeBatch();
-                        }
-                    } else {
-                        throw new SQLException("❌ Creating bill failed, no ID obtained.");
-                    }
-                }
-            }
+	            int billId;
+	            try (ResultSet keys = psBill.getGeneratedKeys()) {
+	                if (!keys.next()) throw new SQLException("Creating bill failed, no generated key obtained.");
+	                billId = keys.getInt(1);
+	                bill.setBill_number(String.valueOf(billId));
+	            }
 
-            conn.commit();
-            success = true;
+	            try (PreparedStatement psItem = conn.prepareStatement(insertBillItemSQL);
+	                 PreparedStatement psDec = conn.prepareStatement(decStockSQL)) {
 
-        } catch (SQLException e) {
-            System.out.println("❌ Error creating bill: " + e.getMessage());
-            e.printStackTrace();
-        }
+	                for (BillItem item : bill.getBill_items()) {
+	                    // 1) Decrement stock (guarded)
+	                    psDec.setInt(1, item.getQuantity());
+	                    psDec.setInt(2, item.getItemId());
+	                    psDec.setInt(3, item.getQuantity());
+	                    int dec = psDec.executeUpdate();
+	                    if (dec == 0) {
+	                        throw new SQLException("Insufficient stock for item_id=" + item.getItemId());
+	                    }
 
-        return success;
-    }
+	                    // 2) Insert bill item
+	                    psItem.setInt(1, billId);
+	                    psItem.setInt(2, item.getItemId());
+	                    psItem.setInt(3, item.getQuantity());
+	                    psItem.setBigDecimal(4, BigDecimal.valueOf(item.getPrice()));
+	                    psItem.addBatch();
+	                }
+	                psItem.executeBatch();
+	            }
+
+	            conn.commit();
+	            return true;
+
+	        } catch (SQLException ex) {
+	            conn.rollback();
+	            ex.printStackTrace();
+	            return false;
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
 
     // READ BILL BY ID
-    public Bill getBillById(int billId) {
-        Bill bill = null;
-        String billSQL = "SELECT * FROM bills WHERE id = ?";
-        String billItemsSQL = "SELECT * FROM bill_items WHERE bill_id = ?";
+	// com.project.dao.BillDAO
+	public Bill getBillById(int billId) {
+	    Bill bill = null;
 
-        try (Connection conn = DBConnectionFactory.getConnection()) {
+	    String billSQL =
+	        "SELECT b.id, b.customer_id, b.bill_date, b.total_amount, " +
+	        "       c.name AS customer_name " +
+	        "FROM bills b " +
+	        "JOIN customer c ON c.account_no = b.customer_id " +
+	        "WHERE b.id = ?";
 
-            try (PreparedStatement psBill = conn.prepareStatement(billSQL)) {
-                psBill.setInt(1, billId);
-                try (ResultSet rsBill = psBill.executeQuery()) {
+	    String billItemsSQL =
+	        "SELECT bi.id, bi.bill_id, bi.item_id, bi.quantity, bi.price, " +
+	        "       i.item_code, i.item_name " +
+	        "FROM bill_items bi " +
+	        "JOIN items i ON i.id = bi.item_id " +
+	        "WHERE bi.bill_id = ?";
 
-                    if (rsBill.next()) {
-                        bill = new Bill();
-                        bill.setBill_number(String.valueOf(rsBill.getInt("id")));
-                        bill.setCustomer_account_no(rsBill.getString("customer_id"));
-                        bill.setBill_date(rsBill.getTimestamp("bill_date"));
-                        bill.setTotal_amount(rsBill.getDouble("total_amount"));
+	    try (Connection conn = DBConnectionFactory.getConnection()) {
 
-                        // Get bill items
-                        try (PreparedStatement psItems = conn.prepareStatement(billItemsSQL)) {
-                            psItems.setInt(1, billId);
-                            try (ResultSet rsItems = psItems.executeQuery()) {
-                                List<BillItem> items = new ArrayList<>();
-                                while (rsItems.next()) {
-                                    BillItem item = new BillItem();
-                                    item.setBill_item_id(String.valueOf(rsItems.getInt("id")));
-                                    item.setBill_number(String.valueOf(rsItems.getInt("bill_id")));
-                                    item.setItem_code(rsItems.getString("item_id"));
-                                    item.setQuantity(rsItems.getInt("quantity"));
-                                    item.setPrice(rsItems.getDouble("price"));
-                                    items.add(item);
-                                }
-                                bill.setBill_items(items);
-                            }
-                        }
-                    }
-                }
-            }
+	        // Load bill + customer name
+	        try (PreparedStatement psBill = conn.prepareStatement(billSQL)) {
+	            psBill.setInt(1, billId);
+	            try (ResultSet rs = psBill.executeQuery()) {
+	                if (rs.next()) {
+	                    bill = new Bill();
+	                    bill.setBill_number(String.valueOf(rs.getInt("id")));
+	                    bill.setCustomer_account_no(rs.getString("customer_id"));
+	                    bill.setCustomer_name(rs.getString("customer_name")); // <-- here
+	                    bill.setBill_date(rs.getTimestamp("bill_date"));
+	                    bill.setTotal_amount(rs.getDouble("total_amount"));
+	                }
+	            }
+	        }
 
-        } catch (SQLException e) {
-            System.out.println("❌ Error fetching bill: " + e.getMessage());
-            e.printStackTrace();
-        }
+	        if (bill == null) return null;
 
-        return bill;
-    }
+	        // Load items + book name/code
+	        try (PreparedStatement psItems = conn.prepareStatement(billItemsSQL)) {
+	            psItems.setInt(1, billId);
+	            try (ResultSet rs = psItems.executeQuery()) {
+	                List<BillItem> items = new ArrayList<>();
+	                while (rs.next()) {
+	                    BillItem it = new BillItem();
+	                    it.setBill_item_id(String.valueOf(rs.getInt("id")));
+	                    it.setBill_number(String.valueOf(rs.getInt("bill_id")));
+	                    it.setItemId(rs.getInt("item_id"));
+
+	                    it.setItem_code(rs.getString("item_code")); // Book Code
+	                    it.setBook_name(rs.getString("item_name")); // Book Name
+
+	                    it.setQuantity(rs.getInt("quantity"));
+	                    it.setPrice(rs.getDouble("price")); // historical price
+	                    items.add(it);
+	                }
+	                bill.setBill_items(items);
+	            }
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
+	    return bill;
+	}
 
     // READ ALL BILLS
     public List<Bill> getAllBills() {

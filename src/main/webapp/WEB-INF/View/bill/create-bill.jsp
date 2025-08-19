@@ -168,36 +168,46 @@ table tbody tr:hover {
 
         <!-- Select Books/Items -->
         <h3>Select Books:</h3>
-        <table border="1">
-            <tr>
-                <th>Select</th>
-                <th>Book Name</th>
-                <th>Price</th>
-                <th>Quantity</th>
-            </tr>
-            <%
-                try {
-                    Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/pahanadb","root","RashAqee21");
-                    Statement st = conn.createStatement();
-                    ResultSet rs = st.executeQuery("SELECT item_name, price FROM items");
-                    while(rs.next()){
-                        String itemName = rs.getString("item_name");
-                        double price = rs.getDouble("price");
-            %>
-            <tr>
-                <td><input type="checkbox" name="item_<%=itemName.replaceAll(" ","_")%>" value="<%=itemName%>"></td>
-                <td><%=itemName%></td>
-                <td>Rs. <%=price%></td>
-                <td><input type="number" name="qty_<%=itemName.replaceAll(" ","_")%>" min="0" value="0"></td>
-            </tr>
-            <%
-                    }
-                    conn.close();
-                } catch(Exception e){
-                    out.println("<tr><td colspan='4'>Error loading items</td></tr>");
-                }
-            %>
-        </table>
+<%
+    try {
+        Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/pahanadb","root","RashAqee21");
+        Statement st = conn.createStatement();
+        ResultSet rs = st.executeQuery("SELECT id, item_name, price, stock_quantity FROM items");
+%>
+<table>
+  <tr>
+    <th>Select</th>
+    <th>Book Name</th>
+    <th>Price</th>
+    <th>In Stock</th>
+    <th>Quantity</th>
+  </tr>
+<%
+        while (rs.next()) {
+            int id = rs.getInt("id");
+            String itemName = rs.getString("item_name");
+            double price = rs.getDouble("price");
+            int stock = rs.getInt("stock_quantity");
+%>
+  <tr>
+    <td>
+      <input type="checkbox" name="item_ids" value="<%=id%>">
+      <input type="hidden" name="price_<%=id%>" value="<%=price%>">
+    </td>
+    <td><%=itemName%></td>
+    <td>Rs. <%=price%></td>
+    <td><%=stock%></td>
+    <td><input type="number" name="qty_<%=id%>" min="0" max="<%=stock%>" value="0"></td>
+  </tr>
+<%
+        }
+        conn.close();
+    } catch(Exception e){
+        out.println("<tr><td colspan='5'>Error loading items</td></tr>");
+    }
+%>
+</table>
+
         <br>
         <input type="submit" name="calculate" value="Calculate Bill">
     </form>
