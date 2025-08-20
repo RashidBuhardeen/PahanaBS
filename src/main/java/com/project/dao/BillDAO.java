@@ -171,49 +171,6 @@ public class BillDAO {
         return bills;
     }
 
-    // UPDATE BILL (basic fields only)
-    public boolean updateBill(Bill bill) {
-        String sql = "UPDATE bills SET customer_id=?, bill_date=?, total_amount=? WHERE id=?";
-        try (Connection conn = DBConnectionFactory.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, bill.getCustomer_account_no());
-            ps.setTimestamp(2, new java.sql.Timestamp(bill.getBill_date().getTime()));
-            ps.setDouble(3, bill.getTotal_amount());
-            ps.setInt(4, Integer.parseInt(bill.getBill_number()));
 
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.out.println("❌ Error updating bill: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
 
-    // DELETE BILL (and its items)
-    public boolean deleteBill(int billId) {
-        String deleteItems = "DELETE FROM bill_items WHERE bill_id=?";
-        String deleteBill = "DELETE FROM bills WHERE id=?";
-
-        try (Connection conn = DBConnectionFactory.getConnection()) {
-            conn.setAutoCommit(false);
-
-            try (PreparedStatement psItems = conn.prepareStatement(deleteItems)) {
-                psItems.setInt(1, billId);
-                psItems.executeUpdate();
-            }
-
-            try (PreparedStatement psBill = conn.prepareStatement(deleteBill)) {
-                psBill.setInt(1, billId);
-                psBill.executeUpdate();
-            }
-
-            conn.commit();
-            return true;
-
-        } catch (SQLException e) {
-            System.out.println("❌ Error deleting bill: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
 }

@@ -8,9 +8,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
 
-/**
- * Handles login requests (GET → show login page, POST → authenticate user).
- */
+
 @WebServlet("/login")
 public class LoginController extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -23,9 +21,8 @@ public class LoginController extends HttpServlet {
         userService = UserService.getInstance();
     }
 
-    /**
-     * Handles GET requests → Show login page.
-     */
+    // Handles GET requests → Show login page.
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -37,9 +34,8 @@ public class LoginController extends HttpServlet {
         }
     }
 
-    /**
-     * Handles POST requests → Authenticate user.
-     */
+    //Handles POST requests → Authenticate user.
+     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

@@ -77,9 +77,6 @@ public class CashierDashboardController extends HttpServlet {
                 case "saveCustomer":
                     saveCustomer(req, resp);
                     break;
-                case "updateCustomer":
-                    updateCustomer(req, resp);
-                    break;
                 case "submitBill":
                     submitBill(req, resp);
                     break;
@@ -125,30 +122,6 @@ public class CashierDashboardController extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/View/cashier/cashier-db.jsp").forward(req, resp);
     }
 
-    private void updateCustomer(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        String accountNo = req.getParameter("account_no");
-        String name = req.getParameter("name");
-        String address = req.getParameter("address");
-        String telephone = req.getParameter("telephone");
-        String email = req.getParameter("email");
-
-        if (accountNo == null || accountNo.isEmpty()) {
-            throw new IllegalArgumentException("Account number is required to update.");
-        }
-
-        try (Connection conn = DBConnectionFactory.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "UPDATE customer SET name=?, address=?, telephone_number=?, email=? WHERE account_no=?")) {
-            ps.setString(1, name);
-            ps.setString(2, address);
-            ps.setString(3, telephone);
-            ps.setString(4, email);
-            ps.setString(5, accountNo);
-            ps.executeUpdate();
-        }
-
-        resp.sendRedirect(req.getContextPath() + "/cashier?action=addCustomer&updated=1");
-    }
 
     private void submitBill(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         String customerAccount = req.getParameter("account_no");

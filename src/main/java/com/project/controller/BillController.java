@@ -32,9 +32,6 @@ public class BillController extends HttpServlet {
         case "create":
             request.getRequestDispatcher("/WEB-INF/View/bill/create-bill.jsp").forward(request, response);
             break;
-        case "delete":
-            deleteBill(request, response);
-            break;
         case "view":
             viewBill(request, response);
             break;
@@ -42,7 +39,6 @@ public class BillController extends HttpServlet {
             printBill(request, response);
             break;
         default:
-            listBills(request, response);
             break;
     }
     }
@@ -59,19 +55,13 @@ public class BillController extends HttpServlet {
     }
 
     // List all bills
-    private void listBills(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void viewBill(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<Bill> bills = billDAO.getAllBills();
         request.setAttribute("bills", bills);
-        request.getRequestDispatcher("views/bill/list-bills.jsp").forward(request, response);
-    }
-
-    // View single bill
-    private void viewBill(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int billId = Integer.parseInt(request.getParameter("id"));
-        Bill bill = billDAO.getBillById(billId);
-        request.setAttribute("bill", bill);
         request.getRequestDispatcher("views/bill/view-bill.jsp").forward(request, response);
     }
+
+
 
  // Create new bill
     private void createBill(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
@@ -137,13 +127,6 @@ public class BillController extends HttpServlet {
         }
     }
 
-
-    // Delete bill
-    private void deleteBill(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        int billId = Integer.parseInt(request.getParameter("id"));
-        billDAO.deleteBill(billId);
-        response.sendRedirect("bill?action=list");
-    }
     
     
     // Print bill
