@@ -61,11 +61,6 @@
 
     <div class="cards">
 
-
-
-
-
-
         <div class="card">
             <h3>Total Revenue</h3>
             <p class="card-value">
