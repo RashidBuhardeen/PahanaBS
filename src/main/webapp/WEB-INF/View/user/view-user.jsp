@@ -137,12 +137,12 @@ body {
 
                     while (rs.next()) {
                         int id = rs.getInt("id");
-                        String username = rs.getString("username");
+                        String userName = rs.getString("username");
                         String role = rs.getString("role");
-            %>
+                    %>
                         <tr>
                             <td data-label="User ID"><%= id %></td>
-                            <td data-label="Username"><%= username %></td>
+                            <td data-label="Username"><%= userName %></td>
                             <td data-label="Role"><%= role %></td>
                             <td data-label="Actions">
                                 <a href="user?action=editUser&id=<%= id %>" class="btn">Edit</a>
@@ -150,7 +150,7 @@ body {
                                    onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
                             </td>
                         </tr>
-            <%
+                    <%
                     }
                 } catch (Exception e) {
                     out.println("<tr><td colspan='4'>Error: " + e.getMessage() + "</td></tr>");

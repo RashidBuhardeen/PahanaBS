@@ -1,3 +1,4 @@
+
 package com.project.dao;
 
 import com.project.model.User;
@@ -6,6 +7,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAO {
+
+    // Authenticate user by username and password
+    public User authenticate(String username, String password) {
+        String query = "SELECT * FROM user WHERE username = ? AND password = ?";
+        try (Connection conn = DBConnectionFactory.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password); // ⚠️ Password should be hashed in production
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return new User(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("role")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error authenticating user: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public void addUser(User user) {
         String query = "INSERT INTO user (username, password, role) VALUES (?, ?, ?)";

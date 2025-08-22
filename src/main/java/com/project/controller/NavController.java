@@ -35,9 +35,9 @@ public class NavController extends HttpServlet {
         } else if ("customers".equals(action)) {
             request.getRequestDispatcher("/WEB-INF/View/customer/view-customers.jsp").forward(request, response);
         } else if ("items".equals(action)) {
-            request.getRequestDispatcher("/WEB-INF/View/item/view-items.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/View/user/view-user.jsp").forward(request, response);
         } else if ("user".equals(action)) {
-            request.getRequestDispatcher("/WEB-INF/View/item/view-user.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/View/user/view-user.jsp").forward(request, response);
         } else if ("bills".equals(action)) {
             request.getRequestDispatcher("/WEB-INF/View/bill/view-bills.jsp").forward(request, response);
         } else if ("logout".equals(action)) {

@@ -45,5 +45,10 @@ public class UserService {
 
     public void deleteUser(int id) {
         userDAO.deleteUser(id);
+   	}
+
+    // Authenticate user by username and password
+    public User authenticate(String username, String password) {
+        return userDAO.authenticate(username, password);
     }
 }
