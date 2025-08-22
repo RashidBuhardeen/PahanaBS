@@ -34,6 +34,7 @@
         </div>
 
         <button type="submit" class="btn">Update Customer</button>
+        <button type="button" class="btnc	"onclick="this.form.reset(); history.back();">Cancel</button>
     </form>
 </div>
 
@@ -111,6 +112,22 @@ body {
 
 .btn:hover {
     background-color: #e68900;
+}
+
+/* Button c */
+.btnc {
+    background-color: #201c16;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.btnc:hover {
+    background-color: #483f32;
 }
 
 /* Responsive */

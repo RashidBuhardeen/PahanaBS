@@ -1,15 +1,16 @@
 package com.project.model;
 
 public class User {
+
     private int id;
     private String username;
-    private String password; // Note: store hashed passwords in production
-    private String role;     // e.g., "admin", "user"
+    private String password;
+    private String role;
 
-    // Default constructor
-    public User() {}
+    public User() {
+        // Default constructor
+    }
 
-    // Parameterized constructor
     public User(int id, String username, String password, String role) {
         this.id = id;
         this.username = username;
@@ -17,7 +18,13 @@ public class User {
         this.role = role;
     }
 
-    // Getters and setters
+    public User(String username, String password, String role) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+    }
+
+    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -48,12 +55,5 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
-    }
-
-    // Optional: override toString() for easier debugging
-    @Override
-    public String toString() {
-        return "User{id=" + id + ", username='" + username + '\'' +
-               ", role='" + role + '\'' + '}';
     }
 }

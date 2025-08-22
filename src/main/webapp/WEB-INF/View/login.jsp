@@ -6,7 +6,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Pahana Edu | Login</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">
 </head>
 <style>
 /* Body */

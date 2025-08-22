@@ -1,5 +1,8 @@
 package com.project.service;
 
+import java.sql.SQLException;
+import java.util.List;
+
 import com.project.dao.UserDAO;
 import com.project.model.User;
 
@@ -8,12 +11,10 @@ public class UserService {
     private static UserService instance;
     private UserDAO userDAO;
 
-    // Private constructor for singleton
     private UserService() {
         this.userDAO = new UserDAO();
     }
 
-    // Singleton instance
     public static UserService getInstance() {
         if (instance == null) {
             synchronized (UserService.class) {
@@ -25,18 +26,24 @@ public class UserService {
         return instance;
     }
 
-    // Validate login credentials
-    public User authenticate(String username, String password) {
-        User user = userDAO.getUserByUsername(username);
-        if (user != null && user.getPassword().equals(password)) {
-            // In production, use hashed passwords and secure verification
-            return user;
-        }
-        return null;
+    public void addUser(User user) {
+        userDAO.addUser(user);
     }
 
-    // Register new user
-    public boolean registerUser(User user) {
-        return userDAO.addUser(user);
+    public List<User> viewUsers() throws SQLException {
+        System.out.println("=== UserService.viewUsers() called ===");
+        return userDAO.viewUsers();
+    }
+
+    public User getUserById(int id) throws SQLException {
+        return userDAO.getUserById(id);
+    }
+
+    public void updateUser(User user) {
+        userDAO.updateUser(user);
+    }
+
+    public void deleteUser(int id) {
+        userDAO.deleteUser(id);
     }
 }

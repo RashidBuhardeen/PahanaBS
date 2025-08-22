@@ -117,6 +117,22 @@ table tbody tr:hover {
     margin: 6px 0;
 }
 
+/* Button c */
+.btnc {
+    background-color: #201c16;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.btnc:hover {
+    background-color: #483f32;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     table, table tbody, table tr, table td, table th {
@@ -210,6 +226,7 @@ table tbody tr:hover {
 
         <br>
         <input type="submit" name="calculate" value="Calculate Bill">
+        <button type="button" class="btnc	"onclick="this.form.reset(); history.back();">Cancel</button>
     </form>
 
     <hr>
@@ -268,6 +285,7 @@ table tbody tr:hover {
                         <input type="hidden" name="bill_items" value="<%=billItems.toString().replace("\"","'")%>">
                         <input type="hidden" name="total_amount" value="<%=total%>">
                         <input type="submit" value="Print Bill">
+                        
                     </form>
     <%
                 } else {

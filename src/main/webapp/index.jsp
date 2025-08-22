@@ -4,7 +4,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Pahana Book Shop - Admin System</title>
+    <title>Pahana Book Shop</title>
     <style>
 /* Reset */
 * {
