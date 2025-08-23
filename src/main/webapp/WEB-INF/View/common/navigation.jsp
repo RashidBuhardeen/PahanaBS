@@ -21,7 +21,6 @@
       <li><a href="navigate?action=customers">Customers</a></li>
       <li><a href="navigate?action=items">Items</a></li>
       <li><a href="navigate?action=bills">Bills</a></li>
-      <li><a href="navigate?action=user">User</a></li>
       <li><a href="logout?action=logout">Logout</a></li>
     </ul>
   </div>

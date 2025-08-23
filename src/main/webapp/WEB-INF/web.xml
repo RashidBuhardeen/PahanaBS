@@ -33,7 +33,6 @@
         <servlet-name>LoginController</servlet-name>
         <url-pattern>/LoginController</url-pattern>
     </servlet-mapping>
-    
-        <!-- Example: navigate Controller Servlet -->
+
 
 </web-app>

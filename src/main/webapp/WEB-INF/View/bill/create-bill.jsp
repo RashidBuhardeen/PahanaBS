@@ -157,6 +157,7 @@ table tbody tr:hover {
 <div class="container">
     <h2>Create Bill</h2>
     <form method="post" action="bill?action=create">
+    <input type="hidden" name="action" value="submitBill"/>
         <!-- Select Customer -->
         <label>Select Customer:</label>
         <select name="account_no" required>
@@ -205,7 +206,7 @@ table tbody tr:hover {
             double price = rs.getDouble("price");
             int stock = rs.getInt("stock_quantity");
 %>
-  <tr>
+  <tr>	
     <td>
       <input type="checkbox" name="item_ids" value="<%=id%>">
       <input type="hidden" name="price_<%=id%>" value="<%=price%>">
@@ -299,6 +300,15 @@ table tbody tr:hover {
     %>
 
 </div>
+
+<script>
+(function(){
+  const form = document.getElementById('billForm');
+  form.addEventListener('submit', function () {
+    window.open('about:blank', 'billPrintTab'); 
+  });
+})();
+</script>
 
 </body>
 </html>

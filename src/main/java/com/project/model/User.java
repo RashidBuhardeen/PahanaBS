@@ -18,12 +18,6 @@ public class User {
         this.role = role;
     }
 
-    public User(String username, String password, String role) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-    }
-
     // Getters and Setters
     public int getId() {
         return id;

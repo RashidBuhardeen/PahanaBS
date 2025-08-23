@@ -9,28 +9,54 @@ import java.util.List;
 public class UserDAO {
 
     // Authenticate user by username and password
-    public User authenticate(String username, String password) {
-        String query = "SELECT * FROM user WHERE username = ? AND password = ?";
-        try (Connection conn = DBConnectionFactory.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setString(1, username);
-            pstmt.setString(2, password); // ⚠️ Password should be hashed in production
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return new User(
-                        rs.getInt("id"),
-                        rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("role")
-                    );
-                }
+//    public User authenticate(String username, String password) {
+//        String query = "SELECT * FROM user WHERE username = ? AND password = ?";
+//        try (Connection conn = DBConnectionFactory.getConnection();
+//             PreparedStatement pstmt = conn.prepareStatement(query)) {
+//            pstmt.setString(1, username);
+//            pstmt.setString(2, password);
+//            try (ResultSet rs = pstmt.executeQuery()) {
+//                if (rs.next()) {
+//                    return new User(
+//                        rs.getInt("id"),
+//                        rs.getString("username"),
+//                        rs.getString("password"),
+//                        rs.getString("role")
+//                    );
+//                }
+//            }
+//        } catch (SQLException e) {
+//            System.out.println("❌ Error authenticating user: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
+	
+	public User authenticate(String username, String password) {
+        User user = null;
+
+        try (Connection conn = DBConnectionFactory.getConnection()) {
+            String sql = "SELECT * FROM users WHERE username=? AND password=?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                user = new User();
+                user.setId(rs.getInt("id"));
+                user.setUsername(rs.getString("username"));
+                user.setPassword(rs.getString("password")); // optional, usually not stored in session
+                user.setRole(rs.getString("role"));
             }
-        } catch (SQLException e) {
-            System.out.println("❌ Error authenticating user: " + e.getMessage());
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+
+        return user;
     }
+
+
 
     public void addUser(User user) {
         String query = "INSERT INTO user (username, password, role) VALUES (?, ?, ?)";

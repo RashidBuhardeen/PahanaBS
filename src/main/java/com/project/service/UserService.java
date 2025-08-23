@@ -1,8 +1,13 @@
+
 package com.project.service;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.project.dao.DBConnectionFactory;
 import com.project.dao.UserDAO;
 import com.project.model.User;
 
@@ -45,10 +50,13 @@ public class UserService {
 
     public void deleteUser(int id) {
         userDAO.deleteUser(id);
-   	}
+    }
 
-    // Authenticate user by username and password
     public User authenticate(String username, String password) {
         return userDAO.authenticate(username, password);
     }
+    
+    
+    
 }
+        
